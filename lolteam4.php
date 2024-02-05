@@ -247,7 +247,7 @@
                     document.getElementById('teamResult').innerHTML = resultHTML;
                 }
                 
-                // function rating(player) { 이름 추가 하는거 참고 해서 만들어야함
+                // function rating(player) { 레이팅 기능 이름 추가 하는거 참고 해서 만들어야함
                             
                 //     var newname = document.getElementById('player').value;
 

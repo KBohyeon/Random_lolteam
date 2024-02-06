@@ -83,10 +83,10 @@
                         <label for="name<?= $i ?>">이름 <?= $i ?>:</label>
                         <input type="text" list="nameSearch" id="name<?= $i ?>" name="name<?= $i ?>" />
                         <datalist id="nameSearch">
-                             <?php 
+                            <?php 
                             $conn = mysqli_connect("localhost", "root", "1234", "lolteam");
-                             $result = mysqli_query($conn, "SELECT * FROM base");
-                             while ($row = mysqli_fetch_array($result)) {
+                            $result = mysqli_query($conn, "SELECT * FROM base");
+                            while ($row = mysqli_fetch_array($result)) {
                                 $name = $row['Name'];?>
                                 <option value="<?php echo $name; ?>"></option>
                                 <?php  } ?> 
@@ -113,7 +113,7 @@
             </div>
 
             <script>
-        
+                var count = 0;
                 var readTeam;
                 function limitCheckboxes() {
                     var checkboxes = document.querySelectorAll('input[type="checkbox"]');
@@ -166,7 +166,6 @@
                             } 
 
                             else if (result === "duplicate") {
-
                                 Swal.fire({
                                     icon: 'error',
                                     title: newname + '은(는) 등록 되어 있는 이름 이에요.',
@@ -178,6 +177,7 @@
                 }
                 
                 function createTeams() {
+                    count =0;
                     var names = [];
                     var checkedNames = [];
 
@@ -196,8 +196,8 @@
                     if (checkedNames.length >= 2) {
                         // 선택된 2명도 랜덤으로 팀에 배정
                         var shuffledCheckedNames = shuffleArray(checkedNames);
-                         redTeam = [shuffledCheckedNames[0]];
-                         blueTeam = [shuffledCheckedNames[1]];
+                        redTeam = [shuffledCheckedNames[0]];
+                        blueTeam = [shuffledCheckedNames[1]];
 
                         // 나머지 팀원을 랜덤하게 팀에 배정
                         var remainingNames = names.filter(function (name) {
@@ -214,8 +214,8 @@
                     else {
                         // 아무도 선택되지 않은 경우 모든 팀원을 랜덤하게 팀에 배정
                         var shuffledNames = shuffleArray(names);
-                         redTeam = shuffledNames.slice(0, 5);
-                         blueTeam = shuffledNames.slice(5, 10);
+                        redTeam = shuffledNames.slice(0, 5);
+                        blueTeam = shuffledNames.slice(5, 10);
                     }
 
                     // 미드, 정글, 탑, 원딜, 서폿 랜덤 배정
@@ -266,82 +266,99 @@
                 //         });
                 // }
 
+                //레드팀 승리 저장 팀짜기를 다시 눌러야 저장 가능
                 function declareWinnerRed() {
-                    Swal.fire({
-                        title: '레드 팀의 승리로 저장 할까요?',
+                    if(count==0) {
+                        Swal.fire({
+                            title: '레드 팀의 승리로 저장 할까요?',
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: '그러죠',
+                            cancelButtonText: '싫어요'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+
+                                //레드 팀이 이겼을 경우
+                                count= +1;
+                                var winMember = JSON.stringify(redTeam); 
+                                var loseMember = JSON.stringify(blueTeam);
+                                $.ajax({ 
+                                    type:"POST", 
+                                    url:"blueTeam.php",
+                                    traditional : true,
+                                    data: {
+                                        winMember: winMember,
+                                        loseMember: loseMember,
+                                    },
+
+                                    success:function(result){ 
+                                        console.log(result);
+                                    }
+                                });
+
+                                Swal.fire(
+                                    '저장되었어요.',
+                                    '데이터 쌓이는 중...',
+                                    'success'
+                                )
+                            }
+                        }) 
+                    } 
+
+                    else if(count!=0) {
+                        alert('이미 저장 했어요');   
+                    }                                                      
+                }
+
+                //블루팀 승리 저장
+                function declareWinnerBlue() {
+                    if(count == 0) {
+                        Swal.fire({
+                        title: '블루 팀의 승리로 저장 할까요?',
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonColor: '#3085d6',
                         cancelButtonColor: '#d33',
                         confirmButtonText: '그러죠',
                         cancelButtonText: '싫어요'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            //레드 팀이 이겼을 경우
-                            var winMember = JSON.stringify(redTeam); 
-                            var loseMember = JSON.stringify(blueTeam);
-                            $.ajax({ 
-                                type:"POST", 
-                                url:"blueTeam.php",
-                                traditional : true,
-                                data: {
-                                    winMember: winMember,
-                                    loseMember: loseMember,
-                                },
+                        }).then((result) => {
+                            if (result.isConfirmed) {
 
-                                success:function(result){ 
-                                    console.log(result);
-                                }
-                            });
+                                //블루 팀이 이겼을 경우
+                                count= +1;
+                                var winMember = JSON.stringify(blueTeam); 
+                                var loseMember = JSON.stringify(redTeam);
+                                $.ajax({ 
+                                    type:"POST", 
+                                    url:"blueTeam.php",
+                                    traditional : true,
+                                    data: {
+                                        winMember: winMember,
+                                        loseMember: loseMember,
+                                    },
 
-                            Swal.fire(
-                                '저장되었어요.',
-                                '데이터 쌓이는 중...',
-                                'success'
-                            )
-                        }
-                    })                                           
-                 }
+                                    success:function(result){ 
+                                        console.log(result);
+                                    }
+                                });
 
-                 function declareWinnerBlue() {
-                    Swal.fire({
-                    title: '블루 팀의 승리로 저장 할까요?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: '그러죠',
-                    cancelButtonText: '싫어요'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
+                                Swal.fire(
+                                    '저장되었어요.',
+                                    '데이터 쌓이는 중...',
+                                    'success'
+                                )
+                            }
+                        }) 
+                    }
 
-                            //블루 팀이 이겼을 경우
-                            var winMember = JSON.stringify(blueTeam); 
-                            var loseMember = JSON.stringify(redTeam);
-                            $.ajax({ 
-                                type:"POST", 
-                                url:"blueTeam.php",
-                                traditional : true,
-                                data: {
-                                    winMember: winMember,
-                                    loseMember: loseMember,
-                                },
-
-                                success:function(result){ 
-                                    console.log(result);
-                                }
-                            });
-
-                            Swal.fire(
-                                '저장되었어요.',
-                                '데이터 쌓이는 중...',
-                                'success'
-                            )
-                        }
-                    })
-                 }
+                    else if(count!=0) {
+                        alert('이미 저장 했어요');   
+                    }
+                }
                 
-   
+
 
                                  // 배열을 랜덤하게 섞는 함수
                 function shuffleArray(array) {

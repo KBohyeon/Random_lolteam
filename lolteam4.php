@@ -1,5 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+    <?php
+    ini_set('display_errors', '0');
+    include "db_conn.php";
+    $Name = '';
+    $Win = '';
+    $Lose = '';
+    $Rating = '';
+    ?>
 <head>
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <meta charset="UTF-8">
@@ -65,6 +73,14 @@
             display: flex;
             justify-content: space-around;
         }
+
+        table, th, td {
+            border: 1px solid #007bff;
+        }
+
+        form {
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -98,7 +114,8 @@
                                             
                 <button class="btn btn-primary btn-lg" onclick="createTeams()">팀 짜기</button>
                 <button class="btn btn-primary btn-lg" onclick="createTeams()">10번 섞기</button>
-                <button class="btn btn-primary btn-lg" onclick="rating()">승률 업데이트</button>
+                <!-- <button class="btn btn-primary btn-lg" onclick="rating()">승률 업데이트</button> -->
+                <input type="submit" class="btn btn-success btn-lg" name="update" value="승률 업데이트">
             </div>
 
             <div class="left-section">
@@ -208,7 +225,6 @@
                         var shuffledNames = shuffleArray(remainingNames);
                         redTeam = redTeam.concat(shuffledNames.slice(0, 4));
                         blueTeam = blueTeam.concat(shuffledNames.slice(4, 8));
-
                     } 
 
                     else {
@@ -246,25 +262,6 @@
 
                     document.getElementById('teamResult').innerHTML = resultHTML;
                 }
-                
-                // function rating(player) { 레이팅 기능 이름 추가 하는거 참고 해서 만들어야함
-                            
-                //     var newname = document.getElementById('player').value;
-
-                //         $.ajax({
-                //         type: "POST",
-                //         url: "rating.php",
-                //         data: {
-                //             newname: newname,
-                //         },
-                //         dataType: "text",
-                //             success: function (result) {
-                //             console.log(result);
-                //             }
-
-
-                //         });
-                // }
 
                 //레드팀 승리 저장 팀짜기를 다시 눌러야 저장 가능
                 function declareWinnerRed() {
@@ -358,21 +355,17 @@
                     }
                 }
                 
-
-
-                                 // 배열을 랜덤하게 섞는 함수
+                // 배열을 랜덤하게 섞는 함수
                 function shuffleArray(array) {
                     var currentIndex = array.length, randomIndex, tempValue;
 
                     while (currentIndex !== 0) {
                         randomIndex = Math.floor(Math.random() * currentIndex);
                         currentIndex--;
-
                         tempValue = array[currentIndex];
                         array[currentIndex] = array[randomIndex];
                         array[randomIndex] = tempValue;
                     }
-
                     return array;
                 }
             </script>
@@ -383,11 +376,72 @@
                 <h3>팀 짜기 결과</h3>
                 <p>팀 짜기 버튼을 눌러 결과를 확인하세요.</p>
             </div>
-            <div class="right-section">
-                <h3>설명서</h3>
-                <p>자동완성에 이름이 있어야 데이터가 저장이 돼요.</p>
-                <p>자동완성에 이름이 뜨지 않는다면 이름을 추가하고 새로고침을 눌러서 뜨는지 확인 해주세요.</p>
-                <p>체크 박스에 체크 된 2명은 같은 팀이 될 수 없고 맞라인을 서게 되어있어요.(동일팀 회피)</p>
+            <div class="right-section" style="display: flex;">
+                <div style="flex: 2;">
+                    <h3>설명서</h3>
+                    <p>자동완성에 이름이 있어야 데이터가 저장이 돼요.</p>
+                    <p>자동완성에 이름이 뜨지 않는다면 이름을 추가하고 새로고침을 눌러서 뜨는지 확인 해주세요.</p>
+                    <p>체크 박스에 체크 된 2명은 같은 팀이 될 수 없고 맞라인을 서게 되어있어요.(동일팀 회피)</p>
+                </div>
+                
+                <div style="flex: 1;" id="rating">
+                    <h3>RATING</h3>
+                    <table class="table mt-4">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>이름</th>
+                                <th>승리</th>
+                                <th>패배</th>
+                                <th>승률</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <?php
+                                $conn = mysqli_connect("localhost", "root", "1234", "lolteam");
+                                //승률이 높은 순으로 5명 검색기능? 추가하기
+                                $result = mysqli_query($conn, "SELECT * FROM base ORDER BY Rating DESC");
+                                $sql_count = 0;
+                                while ($row = mysqli_fetch_array($result)) {
+                                    $Name = $row['Name'];
+                                    $Win = $row['Win'];
+                                    $Lose = $row['Lose'];
+                                    $Rating = $row['Rating'];
+                            ?>
+                                <tr>
+                                    <td><?php echo $Name; ?></td>
+                                    <td><?php echo $Win; ?></td>
+                                    <td><?php echo $Lose; ?></td>
+                                    <td><?php echo $Rating;?>%</td>
+                                </tr>
+                            <?php
+                            $sql_count++;
+                            echo '<script>';
+                            echo 'console.log("'.$sql_count.'")';
+                            echo '</script>';
+                                if($sql_count>=5){
+                                    echo '<script>';
+                                    echo 'console.log("stop")';
+                                    echo '</script>';
+                                    break;
+                                }
+                            }
+                            ?>
+                            <!-- 검색기능 만들다가 멈춤 -->
+                            <form method="POST" action="">
+                                <div class="form-row align-items-center">
+                                    <div class="col-md-3">
+                                        <label for="serialNumber" class="sr-only">이름:</label>
+                                        <input type="text" class="form-control" name="serialNumber" id="serialNumber" value="<?php echo $serialNumber; ?>" placeholder="이름">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="submit" class="btn btn-primary" value="검색">
+                                    </div>
+                                </div>
+                            </form>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
